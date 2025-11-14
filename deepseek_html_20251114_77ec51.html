@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>តាមដាន AI by Zell - Facebook Ad Detective Tool</title>
+    <style>
+        /* CSS Variables for Facebook-inspired theme */
+        :root {
+            --primary: #1877F2;
+            --dark-text: #1C1E21;
+            --light-bg: #F0F2F5;
+            --white: #FFFFFF;
+            --accent: #E4E6EB;
+            --success: #42B72A;
+            --error: #FA383E;
+            --border-radius: 8px;
+            --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            --transition: all 0.2s ease;
+        }
+
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            line-height: 1.5;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: var(--white);
+            box-shadow: var(--card-shadow);
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logo h1 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .logo p {
+            color: var(--dark-text);
+            opacity: 0.7;
+            font-size: 1rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .hero h2 {
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .hero p {
+            margin-bottom: 20px;
+            color: var(--dark-text);
+            opacity: 0.8;
+        }
+
+        /* Form Styles */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        @media (min-width: 768px) {
+            .input-group {
+                flex-direction: row;
+            }
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid var(--accent);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .analyze-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .analyze-btn:hover {
+            background-color: #166FE5;
+        }
+
+        .analyze-btn:disabled {
+            background-color: #BCC0C4;
+            cursor: not-allowed;
+        }
+
+        .validation-error {
+            color: var(--error);
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        /* Results Section */
+        .results {
+            margin-top: 30px;
+        }
+
+        .results-header {
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .results-header h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .analyzed-url {
+            background-color: var(--accent);
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+
+        .placeholder {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--dark-text);
+            opacity: 0.6;
+            font-size: 1.1rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid var(--accent);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background-color: rgba(250, 56, 62, 0.1);
+            border-left: 4px solid var(--error);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            display: none;
+        }
+
+        /* Cards Layout */
+        .cards-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .cards-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .card {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 20px;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            border-bottom: 1px solid var(--accent);
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .card-subtitle {
+            font-size: 0.9rem;
+            color: var(--dark-text);
+            opacity: 0.7;
+        }
+
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--dark-text);
+            opacity: 0.7;
+            margin-bottom: 3px;
+        }
+
+        .card-value {
+            font-size: 0.95rem;
+        }
+
+        .explanation {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--accent);
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 50px;
+            color: var(--dark-text);
+            opacity: 0.6;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>តាមដាន AI by Zell</h1>
+                <p>AI-powered Facebook Ad Detective Tool</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <h2>Reverse-Engineer Facebook Ads with AI</h2>
+            <p>Paste a Facebook post URL below to analyze its potential ad strategy, estimated spend, target audience, and more.</p>
+            
+            <div class="input-group">
+                <input type="url" class="url-input" placeholder="Paste Facebook post URL here..." id="url-input">
+                <button class="analyze-btn" id="analyze-btn">Analyze</button>
+            </div>
+            <div class="validation-error" id="validation-error">Please enter a valid Facebook URL</div>
+        </section>
+
+        <section class="results">
+            <div class="results-header" id="results-header">
+                <h3>Analysis Results</h3>
+                <div class="analyzed-url" id="analyzed-url"></div>
+            </div>
+
+            <div class="placeholder" id="placeholder">
+                Paste a Facebook post link to start analyzing.
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>AI is analyzing this post...</p>
+            </div>
+
+            <div class="error-message" id="error-message">
+                Unable to reach AI right now. Please check your API key or try again.
+            </div>
+
+            <div class="cards-container" id="cards-container">
+                <!-- Cards will be dynamically inserted here -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>តាមដាន AI by Zell &copy; 2023</p>
+        </div>
+    </footer>
+
+    <script>
+        // ===========================================
+        // CONFIGURATION - UPDATE THESE VALUES
+        // ===========================================
+        
+        // TODO: Replace with your actual DeepSeek API key
+        const DEEPSEEK_API_KEY = "YOUR_DEEPSEEK_API_KEY_HERE";
+        
+        // TODO: Replace with the actual DeepSeek API endpoint
+        const DEEPSEEK_API_ENDPOINT = "https://api.deepseek.com/v1/chat/completions";
+        
+        // ===========================================
+        // AI PROMPT & INSTRUCTIONS
+        // ===========================================
+        
+        const SYSTEM_PROMPT = `You are an expert Facebook ads analyst. Your task is to analyze a Facebook post URL and provide three distinct assumption sets about the potential ad campaign behind it.
+
+        METHODOLOGY:
+        1. Treat the given Facebook post URL as the subject.
+        2. Based on publicly visible metrics & typical benchmarks, make smart assumptions using this methodology:
+          - Check:
+            - Reactions, comments, shares (assumed or provided later).
+            - Caption language and tone.
+            - Creative format (image, video, reel).
+            - Presence of price, phone number, website, message button, etc.
+          - Use country-level CPM benchmarks (e.g., very low for Cambodia compared to global) for spend estimates.
+          - Infer:
+            - 3–5 possible engagement rate scenarios.
+            - Impressions range using: impressions ≈ engagements ÷ ER.
+            - Spend using: spend ≈ impressions/1000 × CPM.
+            - Run days from timestamps (if known) or typical behavior ranges.
+        3. Generate 3 distinct assumption sets (Option A/B/C):
+          - Each with:
+            - Estimated Spend (range)
+            - Estimated Run Duration (days)
+            - Objective
+            - Target Audience
+            - Placements
+            - Funnel Stage
+            - 1–2 line explanation
+
+        RESPONSE FORMAT:
+        Respond strictly in valid JSON following this exact schema:
+
+        {
+          "url": "<facebook_post_url>",
+          "options": [
+            {
+              "label": "Option A",
+              "spend": "$X - $Y",
+              "days": "X - Y days",
+              "objective": "...",
+              "audience": "...",
+              "placements": "...",
+              "funnel_stage": "...",
+              "explanation": "..."
+            },
+            {
+              "label": "Option B",
+              "spend": "...",
+              "days": "...",
+              "objective": "...",
+              "audience": "...",
+              "placements": "...",
+              "funnel_stage": "...",
+              "explanation": "..."
+            },
+            {
+              "label": "Option C",
+              "spend": "...",
+              "days": "...",
+              "objective": "...",
+              "audience": "...",
+              "placements": "...",
+              "funnel_stage": "...",
+              "explanation": "..."
+            }
+          ]
+        }
+
+        If you cannot be certain, still give reasonable ranges and clearly mark them as assumptions.`;
+
+        // ===========================================
+        // APPLICATION LOGIC
+        // ===========================================
+
+        // DOM Elements
+        const urlInput = document.getElementById('url-input');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const validationError = document.getElementById('validation-error');
+        const placeholder = document.getElementById('placeholder');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('error-message');
+        const resultsHeader = document.getElementById('results-header');
+        const analyzedUrl = document.getElementById('analyzed-url');
+        const cardsContainer = document.getElementById('cards-container');
+
+        // Event Listeners
+        analyzeBtn.addEventListener('click', handleAnalyze);
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleAnalyze();
+            }
+        });
+
+        // Main Analysis Function
+        async function handleAnalyze() {
+            const url = urlInput.value.trim();
+            
+            // Validate input
+            if (!url || !isValidFacebookUrl(url)) {
+                validationError.style.display = 'block';
+                return;
+            }
+            
+            validationError.style.display = 'none';
+            
+            // Show loading state
+            placeholder.style.display = 'none';
+            loading.style.display = 'block';
+            errorMessage.style.display = 'none';
+            resultsHeader.style.display = 'none';
+            cardsContainer.innerHTML = '';
+            
+            try {
+                // Call DeepSeek API
+                const response = await callDeepSeekAPI(url);
+                
+                // Process and display results
+                displayResults(url, response);
+            } catch (error) {
+                console.error('API Error:', error);
+                showError();
+            }
+        }
+
+        // Validate Facebook URL
+        function isValidFacebookUrl(url) {
+            const facebookPattern = /^(https?:\/\/)?(www\.)?facebook\.com\/.+/;
+            return facebookPattern.test(url);
+        }
+
+        // Call DeepSeek API
+        async function callDeepSeekAPI(url) {
+            // TODO: Replace with actual API call when endpoint is available
+            // For now, we'll simulate the API response with mock data
+            
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Mock response for demonstration
+            return {
+                url: url,
+                options: [
+                    {
+                        label: "Option A",
+                        spend: "$50 - $200",
+                        days: "3 - 7 days",
+                        objective: "Engagement",
+                        audience: "Age 25-40, Both genders, Cambodia, Interest in local businesses",
+                        placements: "Feeds, Stories",
+                        funnel_stage: "Cold",
+                        explanation: "Focusing on building initial awareness with broad targeting."
+                    },
+                    {
+                        label: "Option B",
+                        spend: "$100 - $400",
+                        days: "5 - 10 days",
+                        objective: "Messages",
+                        audience: "Age 30-45, Female, Phnom Penh, Interest in shopping",
+                        placements: "Feeds, Messenger",
+                        funnel_stage: "Warm",
+                        explanation: "Targeting users likely to engage via Messenger for inquiries."
+                    },
+                    {
+                        label: "Option C",
+                        spend: "$200 - $800",
+                        days: "7 - 14 days",
+                        objective: "Conversions",
+                        audience: "Age 35-50, Both genders, Cambodia, Previous website visitors",
+                        placements: "Feeds, Stories, Reels",
+                        funnel_stage: "Retargeting",
+                        explanation: "Retargeting warm audiences with conversion-focused messaging."
+                    }
+                ]
+            };
+            
+            /* 
+            // UNCOMMENT AND USE THIS WHEN YOU HAVE THE ACTUAL API ENDPOINT AND KEY
+            const response = await fetch(DEEPSEEK_API_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: "deepseek-chat",
+                    messages: [
+                        {
+                            role: "system",
+                            content: SYSTEM_PROMPT
+                        },
+                        {
+                            role: "user",
+                            content: `Please analyze this Facebook post URL: ${url}`
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 2000
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return JSON.parse(data.choices[0].message.content);
+            */
+        }
+
+        // Display Results
+        function displayResults(url, data) {
+            // Hide loading state
+            loading.style.display = 'none';
+            
+            // Show results header
+            resultsHeader.style.display = 'block';
+            analyzedUrl.textContent = url;
+            
+            // Clear previous cards
+            cardsContainer.innerHTML = '';
+            
+            // Create and append cards
+            data.options.forEach(option => {
+                const card = createCard(option);
+                cardsContainer.appendChild(card);
+            });
+        }
+
+        // Create Result Card
+        function createCard(option) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="card-title">${option.label}</div>
+                    <div class="card-subtitle">${option.explanation}</div>
+                </div>
+                <div class="card-content">
+                    <div class="card-item">
+                        <div class="card-label">Estimated Spend</div>
+                        <div class="card-value">${option.spend}</div>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-label">Estimated Run Duration</div>
+                        <div class="card-value">${option.days}</div>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-label">Objective</div>
+                        <div class="card-value">${option.objective}</div>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-label">Target Audience</div>
+                        <div class="card-value">${option.audience}</div>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-label">Placements</div>
+                        <div class="card-value">${option.placements}</div>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-label">Funnel Stage</div>
+                        <div class="card-value">${option.funnel_stage}</div>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Show Error Message
+        function showError() {
+            loading.style.display = 'none';
+            errorMessage.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
